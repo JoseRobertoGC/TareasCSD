@@ -1,7 +1,15 @@
-from django.urls import path
+from django.urls import include,path
+from rest_framework import routers
 from . import views
 
+router = routers.DefaultRouter()
+router.register(r'jugador',views.JugadoresViewSet)
+router.register(r'usuario',views.UsuariosViewSet)
+router.register(r'partida',views.PartidasViewSet)
+
 urlpatterns = [
+    path('api',include(router.urls)),
+    path('api-auth/', include('rest_framework.urls', namespace='rest_framework')),
     path('',views.index,name='index'),
     path('suma',views.suma, name = 'suma'),
     path('resta',views.resta, name = 'resta'),

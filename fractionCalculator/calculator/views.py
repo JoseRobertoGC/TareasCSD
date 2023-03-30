@@ -1,4 +1,7 @@
 from django.shortcuts import render
+from rest_framework import viewsets
+from .serializers import JugadorSerializer, UsuarioSerializer, PartidaSerializer
+from .models import Jugadores, Usuarios, Partidas
 from django.http import HttpResponse
 from django.views.decorators.csrf import csrf_exempt
 from json import loads,dumps
@@ -188,4 +191,16 @@ def valida_usuario(request):
     return HttpResponse('{"estatus":True}')
 
 
+class JugadoresViewSet(viewsets.ModelViewSet):
+    queryset = Jugadores.objects.all()
+    serializer_class = JugadorSerializer
 
+
+class UsuariosViewSet(viewsets.ModelViewSet):
+    queryset = Usuarios.objects.all()
+    serializer_class = UsuarioSerializer
+
+
+class PartidasViewSet(viewsets.ModelViewSet):
+    queryset = Partidas.objects.all()
+    serializer_class = PartidaSerializer
