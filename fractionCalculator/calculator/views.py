@@ -2,6 +2,7 @@ from django.shortcuts import render
 from django.http import HttpResponse
 from django.views.decorators.csrf import csrf_exempt
 from json import loads,dumps
+import sqlite3
 
 # Create your views here.
 
@@ -97,6 +98,94 @@ def division(request):
     json_resultado = resultado.toJSON()
 
     return HttpResponse(json_resultado,content_type = "text/json-comment-filtered")
+
+# def usuarios(request):
+#     con = sqlite3.connect("db.sqlite3")
+#     cur = con.cursor()
+#     res = cur.execute("SELECT * FROM usuarios")
+#     resultado = res.fetchall()
+#     lista =[]  
+#     for registro in resultado:
+#         id,grupo,grado,numero = registro
+#         diccionario = {"id":id,"grupo":grupo,"grado":grado,"num_lista":numero}
+#         lista.append(diccionario)
+#     registros =[{"id":1,"grupo":"A","grado":6,"num_lista":4},{"id":2,"grupo":"B","grado":6,"num_lista":2}] 
+#     registros = lista
+#     return render(request, 'usuarios.html',{'lista_usuarios':registros})
+
+def usuarios(request):
+    if request.method == 'GET':
+        con = sqlite3.connect("db.sqlite3")
+        cur = con.cursor()
+        res = cur.execute("SELECT * FROM usuarios")
+        resultado = res.fetchall()
+        lista =[]  
+        for registro in resultado:
+            id,grupo,grado,numero = registro
+            diccionario = {"id":id,"grupo":grupo,"grado":grado,"num_lista":numero}
+            lista.append(diccionario)
+        registros =[{"id":1,"grupo":"A","grado":6,"num_lista":4},{"id":2,"grupo":"B","grado":6,"num_lista":2}] 
+        registros = lista
+        return render(request, 'usuarios.html',{'lista_usuarios':registros})
+    elif request.method == 'POST':
+        body_unicode = request.body.decode('utf-8')
+        body = loads(body_unicode)
+        grado = body['grado']
+        grupo = body['grupo']
+        num_lista = body['num_lista']
+        con = sqlite3.connect("db.sqlite3")
+        cur = con.cursor()
+        res = cur.execute("INSERT INTO usuarios (grupo,num_lista,grado) VALUES(?,?,?)",(grupo,num_lista,grado))
+        con.commit()
+        print(str(grado)+grupo+str(num_lista))
+        return HttpResponse("OK")
+    elif request.method == 'DELETE':
+        return(usuarios_d(request))
+
+
+
+
+@csrf_exempt
+def usuarios_p(request):
+    body_unicode = request.body.decode('utf-8')
+    body = loads(body_unicode)
+    grado = body['grado']
+    grupo = body['grupo']
+    num_lista = body['num_lista']
+    con = sqlite3.connect("db.sqlite3")
+    cur = con.cursor()
+    res = cur.execute("INSERT INTO usuarios (grupo,num_lista,grado) VALUES(?,?,?)",(grupo,num_lista,grado))
+    con.commit()
+    print(str(grado)+grupo+str(num_lista))
+    return HttpResponse("OK")
+
+    
+
+@csrf_exempt
+def usuarios_d(request):
+    body_unicode = request.body.decode('utf-8')
+    body = loads(body_unicode)
+    id = body['id']
+    con = sqlite3.connect("db.sqlite3")
+    cur = con.cursor()
+    res = cur.execute("DELETE FROM usuarios WHERE id_usuario=?", (str(id)))
+    con.commit()
+    return HttpResponse('OK, usuario borrado' + str(id))
+
+
+@csrf_exempt
+def valida_usuario(request):
+    body = request.body.decode('UTF-8')
+    eljson = loads(body)
+    usuario = eljson['id_usuario']
+    contrasenia = eljson['pass']
+    print(usuario+contrasenia)
+    #con = sqlite3.connect("db.sqlite3")
+    #cur = con.cursor()
+    #res = cur.execute("SELECT * FROM usuarios WHERE id_usuario=? AND password=?" , (str(usuario),str(contrasenia)))
+    #si el usuario es correcto regresar respuesta existosa 200 ok
+    #en caso contrario, regresar estatus false
+    return HttpResponse('{"estatus":True}')
 
 
 
