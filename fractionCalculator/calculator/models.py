@@ -15,7 +15,6 @@ class Partidas(models.Model):
     id_usuario = models.ForeignKey(Usuarios, on_delete=models.CASCADE)
     minutos_jugados = models.IntegerField()
     puntaje =  models.IntegerField()
+    
 
-    @property
-    def id(self):
-        return self.id_usuario.id
+
