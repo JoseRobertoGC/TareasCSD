@@ -6,6 +6,8 @@ from django.http import HttpResponse
 from django.views.decorators.csrf import csrf_exempt
 from json import loads,dumps
 import sqlite3
+import requests
+import string
 
 # Create your views here.
 
@@ -147,7 +149,6 @@ def usuarios(request):
 
 
 
-
 @csrf_exempt
 def usuarios_p(request):
     body_unicode = request.body.decode('utf-8')
@@ -191,6 +192,7 @@ def valida_usuario(request):
     return HttpResponse('{"estatus":True}')
 
 
+
 class JugadoresViewSet(viewsets.ModelViewSet):
     queryset = Jugadores.objects.all()
     serializer_class = JugadorSerializer
@@ -204,3 +206,110 @@ class UsuariosViewSet(viewsets.ModelViewSet):
 class PartidasViewSet(viewsets.ModelViewSet):
     queryset = Partidas.objects.all()
     serializer_class = PartidaSerializer
+
+
+def barras(request):
+    '''
+    data = [
+          ['Jugador', 'Minutos Jugados'],
+          ['Ian', 1000],
+          ['Héctor', 1170],
+          ['Alan', 660],
+          ['Manuel', 1030]
+        ]
+    '''
+    data = []
+    data.append(['Jugador', 'Minutos Jugados'])
+    resultados = Partidas.objects.all() #select * from reto;
+    titulo = 'Videojuego Odyssey'
+    titulo_formato = dumps(titulo)
+    subtitulo= 'Total de minutos por jugador'
+    subtitulo_formato = dumps(subtitulo)
+    if len(resultados)>0:
+        for registro in resultados:
+            nombre = registro.puntaje
+            minutos = registro.minutos_jugados
+            data.append([nombre,minutos])
+        data_formato = dumps(data) #formatear los datos en string para JSON
+        elJSON = {'losDatos':data_formato,'titulo':titulo_formato,'subtitulo':subtitulo_formato}
+        return render(request,'barras.html',elJSON)
+    else:
+        return HttpResponse("<h1> No hay registros a mostrar</h1>")
+    
+
+def dastabase_consult(request):
+    resultados = Partidas.objects.all()
+    data = [['Puntaje', 'Minutos jugados']]
+    for registro in resultados:
+        puntaje = registro.puntaje
+        minutos = registro.minutos_jugados
+        data.append([puntaje, minutos])
+    data_json = dumps({'losDatos': data})
+    return HttpResponse(data_json, content_type='application/json')
+
+@csrf_exempt
+def consultar_db(request):
+    if(request.method == 'POST'):
+        body = request.body.decode('UTF-8')
+        eljson = loads(body)
+        puntaje_min = eljson['puntaje_minimo']
+        
+        resultados = Partidas.objects.filter(puntaje__gt=puntaje_min)
+        data = [['ID_Usuario','Puntaje', 'Minutos jugados','Fecha']]
+        for registro in resultados:
+            usuario_id = str(registro.id_usuario)
+            puntaje = registro.puntaje
+            minutos = registro.minutos_jugados
+            fecha = str(registro.fecha)
+            data.append([usuario_id ,puntaje, minutos, fecha])
+        data_json = dumps({'losDatos': data})
+        return HttpResponse(data_json, content_type='application/json')
+    return HttpResponse("La solicitud no es de tipo POST", status=400)
+
+
+
+@csrf_exempt
+def grafica_barras(request):
+    url = "http://127.0.0.1:8000/consultar_db"
+    response = requests.get(url)
+    data = loads(response.content)['losDatos']
+    titulo = 'Videojuego Odyssey'
+    titulo_formato = dumps(titulo)
+    subtitulo= 'Total de minutos por jugador'
+    subtitulo_formato = dumps(subtitulo)
+    elJSON = {'losDatos': data, 'titulo': titulo_formato, 'subtitulo': subtitulo_formato}
+    return render(request,'barras.html',elJSON)
+
+
+
+@csrf_exempt
+def table(request):
+    url = "http://127.0.0.1:8000/consultar_db"
+    response = requests.get(url)
+    data = loads(response.content)['losDatos']
+    titulo = 'Videojuego Odyssey'
+    titulo_formato = dumps(titulo)
+    subtitulo= 'Total de minutos por jugador'
+    subtitulo_formato = dumps(subtitulo)
+    elJSON = {'losDatos': data, 'titulo': titulo_formato, 'subtitulo': subtitulo_formato}
+    return render(request,'tabla.html',elJSON)
+
+
+@csrf_exempt
+def tabla(request):
+    url = "http://127.0.0.1:8000/consultar_db"
+    header = {
+        "Content-Type":"application/json"
+    }
+    payload = {
+        "puntaje_minimo":"500"
+    }
+    response = requests.post(url, data=dumps(payload), headers=header)
+    if response.status_code == 200:
+        data = loads(response.content)['losDatos']
+        titulo = 'Videojuego Odyssey'
+        titulo_formato = dumps(titulo)
+        subtitulo= 'Total de minutos por jugador'
+        subtitulo_formato = dumps(subtitulo)
+        elJSON = {'losDatos': data, 'titulo': titulo_formato, 'subtitulo': subtitulo_formato}
+        return render(request,'tabla.html',elJSON)

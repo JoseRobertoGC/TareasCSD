@@ -1,0 +1,23 @@
+<html>
+  <head>
+    <h1> TABLA DE CONTENIDO DE LA BASE DE DATOS "PARTIDA" </h1>
+    <h3> Se determina un puntuaje minimo y se muestran los datos de aquellas partidas que contienen un puntuaje mayor al establecido</h3>>
+    <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
+    <script type="text/javascript">
+      google.charts.load('current', {'packages':['table']});
+      google.charts.setOnLoadCallback(drawTable);
+
+      function drawTable() {
+        console.log({{losDatos|safe}});
+        var data = google.visualization.arrayToDataTable({{ losDatos|safe }});
+
+        var table = new google.visualization.Table(document.getElementById('table_div'));
+
+        table.draw(data, {showRowNumber: true, width: '50%', height: '50%'});
+      }
+    </script>
+  </head>
+  <body>
+    <div id="table_div"></div>
+  </body>
+</html>
